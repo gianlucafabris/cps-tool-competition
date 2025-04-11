@@ -2,7 +2,15 @@ import json
 import os
 import shutil
 import time
+import json
 
+def get_latest_beamng_path(home):
+    with open(os.path.join(home, "integrity.json"), 'r') as f:
+        data = json.load(f)
+    userprofile = os.environ['USERPROFILE']
+    beamng_base_path = os.path.join(userprofile, r'AppData\Local\BeamNG.drive')
+    version = ".".join(data["version"].split(".")[:2])
+    return os.path.join(beamng_base_path, version)
 
 class BeamNGMainFolder:
     def __init__(self, path):
@@ -70,11 +78,15 @@ class Maps:
     source_map: MapFolder
 
     def __init__(self):
-        self.beamng_levels = LevelsFolder(os.path.join(os.environ['USERPROFILE'], r'Documents/BeamNG.research/levels'))
+        self.beamng_levels = LevelsFolder(os.path.join(os.environ['USERPROFILE'], r'AppData\Local\BeamNG.drive\0.26\levels'))
         self.source_levels = LevelsFolder(os.getcwd()+'/levels_template')
         self.source_map = self.source_levels.get_map('tig')
         self.beamng_map = self.beamng_levels.get_map('tig')
         self.never_logged_path = True
+
+    def set_beamng_home(self, home):
+        self.beamng_levels = LevelsFolder(os.path.join(os.environ['USERPROFILE'], get_latest_beamng_path(home), r'levels'))
+        self.beamng_map = self.beamng_levels.get_map('tig')
 
     def print_paths(self):
         print('beamng_levels', self.beamng_levels.path)

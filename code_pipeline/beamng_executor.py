@@ -17,8 +17,16 @@ from shapely.geometry import Point
 
 import logging as log
 import os.path
+import json
 FloatDTuple = Tuple[float, float, float, float]
 
+def get_latest_beamng_path(home):
+    with open(os.path.join(home, "integrity.json"), 'r') as f:
+        data = json.load(f)
+    userprofile = os.environ['USERPROFILE']
+    beamng_base_path = os.path.join(userprofile, r'AppData\Local\BeamNG.drive')
+    version = ".".join(data["version"].split(".")[:2])
+    return os.path.join(beamng_base_path, version)
 
 class BeamngExecutor(AbstractTestExecutor):
 
@@ -125,10 +133,12 @@ class BeamngExecutor(AbstractTestExecutor):
         # Override default configuration passed via ENV or hardcoded
         if self.beamng_user is not None:
             # Note This changed since BeamNG.research
-            beamng_levels = LevelsFolder(os.path.join(self.beamng_user, '0.26', 'levels'))
+            beamng_levels = LevelsFolder(os.path.join(get_latest_beamng_path(self.beamng_home), 'levels'))
             maps.beamng_levels = beamng_levels
             maps.beamng_map = maps.beamng_levels.get_map('tig')
             # maps.print_paths()
+
+        maps.set_beamng_home(self.beamng_home)
 
         maps.install_map_if_needed()
         maps.beamng_map.generated().write_items(brewer.decal_road.to_json() + '\n' + waypoint_goal.to_json())
